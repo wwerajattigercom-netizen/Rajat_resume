@@ -1,0 +1,21 @@
+# Exported from Render on 2026-06-07T19:14:36Z
+version: "1"
+projects:
+- name: My project
+  environments:
+  - name: rajat_resume
+    services:
+    - type: web
+      name: Rajat_Resume
+      runtime: node
+      repo: https://github.com/wwerajattigercom-netizen/Rajat_resume
+      plan: free
+      envVars:
+      - key: NODE_ENV
+        sync: false
+      region: oregon
+      buildCommand: npm install; npm run build
+      startCommand: npm run start
+      autoDeployTrigger: commit
+      previews:
+        generation: automatic
