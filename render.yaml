@@ -1,3 +1,9 @@
+envGroups:
+  - name: Rajat_resume
+    envVars:
+      - key: RESEND_API_KEY
+        value: rnd_1hoatAvq551IklaBkAF5Y9pYvvCV
+
 services:
   - type: web
     name: Rajat_Resume
@@ -7,6 +13,5 @@ services:
     startCommand: npm run start
     envVars:
       - fromGroup: Rajat_resume
-      - key: RESEND_API_KEY
-        value: rnd_1hoatAvq551IklaBkAF5Y9pYvvCV
-        sync: true
+      - key: NODE_ENV
+        sync: false
