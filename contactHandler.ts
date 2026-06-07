@@ -80,18 +80,35 @@ export async function handleContactSubmission(req: Request, res: Response) {
 
     // Standard RFC check of SMTP variables presence
     if (smtpHost && smtpUser && smtpPass) {
-      console.log(`Attempting SMTP dispatch via ${smtpHost}:${smtpPort} for user ${smtpUser}`);
+      console.log(`Attempting SMTP dispatch via host: ${smtpHost} / port: ${smtpPort} for user ${smtpUser}`);
       
-      const transporter = nodemailer.createTransport({
-        host: smtpHost,
-        port: smtpPort,
-        secure: smtpPort === 465, // True for 465, false for 587/other ports
-        auth: {
-          user: smtpUser,
-          pass: smtpPass,
-        },
-        timeout: 10000, // 10 seconds timeout to prevent hanging connections
-      } as any);
+      let transporter;
+      
+      // Gmail service helper bypasses many proxy/firewall/STARTTLS handshake issues on Cloud vendors (like Render)
+      if (smtpHost.toLowerCase().includes("gmail") || smtpUser.toLowerCase().endsWith("@gmail.com")) {
+        console.log("Utilizing standard 'gmail' service helper configuration for maximum compatibility on Render.");
+        transporter = nodemailer.createTransport({
+          service: "gmail",
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+        });
+      } else {
+        transporter = nodemailer.createTransport({
+          host: smtpHost,
+          port: smtpPort,
+          secure: smtpPort === 465, // True for 465, false for 587/others
+          auth: {
+            user: smtpUser,
+            pass: smtpPass,
+          },
+          tls: {
+            rejectUnauthorized: false, // Bypasses self-signed or intermediate SSL trust store errors in cloud containers
+          },
+          timeout: 10000, // 10 seconds timeout
+        } as any);
+      }
 
       const mailOptions = {
         from: `"${cleanedName} (Portfolio Contact)" <${smtpUser}>`,
