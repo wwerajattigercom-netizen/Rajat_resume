@@ -7,6 +7,6 @@ services:
     startCommand: npm run start
     envVars:
       - fromGroup: Rajat_resume
-      - key: NODE_ENV
-        value: production
+      - key: RESEND_API_KEY
+        value: rnd_1hoatAvq551IklaBkAF5Y9pYvvCV
         sync: true
