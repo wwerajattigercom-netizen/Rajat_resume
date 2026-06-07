@@ -5,7 +5,7 @@
 
 import React, { useState } from "react";
 import { motion } from "motion/react";
-import { Mail, MapPin, Globe, Linkedin, Send, BadgeCheck, AlertCircle } from "lucide-react";
+import { Mail, MapPin, Globe, Linkedin, Send, BadgeCheck, AlertCircle, Copy } from "lucide-react";
 import { PORTFOLIO_OWNER } from "../data";
 
 export default function Contact() {
@@ -14,6 +14,87 @@ export default function Contact() {
   const [submitDetails, setSubmitDetails] = useState<{ emailSent: boolean; warning?: string; error?: string } | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [lastSubmittedData, setLastSubmittedData] = useState<typeof formData | null>(null);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+  const [copiedBody, setCopiedBody] = useState(false);
+
+  const handleCopyEmail = () => {
+    navigator.clipboard.writeText("panderajat27@gmail.com")
+      .then(() => {
+        setCopiedEmail(true);
+        setTimeout(() => setCopiedEmail(false), 2000);
+      })
+      .catch((err) => console.error("Could not copy email:", err));
+  };
+
+  const getMailText = () => {
+    const data = lastSubmittedData || formData;
+    return `Hi Rajat,\n\nI submitted the following message via your portfolio website:\n\n` +
+      `-----------------------------------------\n` +
+      `From: ${data.name || "Anon"} <${data.email || "anon@example.com"}>\n` +
+      `Subject: ${data.subject || "No Subject"}\n\n` +
+      `Message:\n${data.message || ""}\n` +
+      `-----------------------------------------\n\n` +
+      `Best regards,\n${data.name || "Anon"}`;
+  };
+
+  const handleCopyBody = () => {
+    const text = getMailText();
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        setCopiedBody(true);
+        setTimeout(() => setCopiedBody(false), 2000);
+      })
+      .catch((err) => console.error("Could not copy body:", err));
+  };
+
+  const getMailtoUrl = () => {
+    const data = lastSubmittedData || formData;
+    const text = getMailText();
+    return `mailto:panderajat27@gmail.com?subject=${encodeURIComponent(data.subject || `Portfolio Message from ${data.name || "Visitor"}`)}&body=${encodeURIComponent(text)}`;
+  };
+
+  const mailtoUrl = getMailtoUrl();
+
+  const renderMailFallbackButtons = (showWarningNote: boolean = true) => {
+    return (
+      <div className="border-t border-white/5 pt-4 mt-4 space-y-3">
+        {showWarningNote && (
+          <p className="text-slate-400 font-sans text-xs font-light leading-relaxed">
+            Due to your browser's security policies inside the sandboxed preview iframe, directly launching mail clients might be restricted. Recommend using the <strong className="text-white font-medium">Copy buttons</strong> below as a guaranteed backup:
+          </p>
+        )}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <a
+            href={mailtoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-3 bg-blue-650 hover:bg-blue-550 text-white text-xs font-mono font-bold uppercase tracking-wider rounded transition-colors"
+          >
+            <Mail className="w-3.5 h-3.5" />
+            <span>Launch Mail Client</span>
+          </a>
+          
+          <button
+            type="button"
+            onClick={handleCopyEmail}
+            className="inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-mono rounded transition-colors cursor-pointer"
+          >
+            {copiedEmail ? <BadgeCheck className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            <span>{copiedEmail ? "Email Copied!" : "Copy Recipient"}</span>
+          </button>
+          
+          <button
+            type="button"
+            onClick={handleCopyBody}
+            className="inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-mono rounded transition-colors cursor-pointer"
+          >
+            {copiedBody ? <BadgeCheck className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+            <span>{copiedBody ? "Text Copied!" : "Copy Msg Text"}</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,18 +130,6 @@ export default function Contact() {
       setStatus("error");
     }
   };
-
-  const mailtoUrl = lastSubmittedData 
-    ? `mailto:panderajat27@gmail.com?subject=${encodeURIComponent(lastSubmittedData.subject || `Portfolio Message from ${lastSubmittedData.name}`)}&body=${encodeURIComponent(
-        `Hi Rajat,\n\nI submitted the following message via your portfolio website:\n\n` +
-        `-----------------------------------------\n` +
-        `From: ${lastSubmittedData.name} <${lastSubmittedData.email}>\n` +
-        `Subject: ${lastSubmittedData.subject || "No Subject"}\n\n` +
-        `Message:\n${lastSubmittedData.message}\n` +
-        `-----------------------------------------\n\n` +
-        `Best regards,\n${lastSubmittedData.name}`
-      )}`
-    : "#";
 
   const isGoogleAppPasswordErr = !!(submitDetails?.error && (
     submitDetails.error.toLowerCase().includes("application-specific") ||
@@ -184,18 +253,7 @@ export default function Contact() {
                         </ol>
                       </div>
 
-                      <div className="border-t border-white/5 pt-3.5">
-                        <p className="text-slate-400 font-sans text-xs font-light mb-3 leading-relaxed">
-                          Click below to transmit this message instantly using your device's default mail client instead:
-                        </p>
-                        <a
-                          href={mailtoUrl}
-                          className="inline-flex w-full items-center justify-center gap-2 py-2.5 px-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-bold uppercase tracking-wider rounded transition-colors"
-                        >
-                          <Mail className="w-3.5 h-3.5" />
-                          <span>Send via Mail Client</span>
-                        </a>
-                      </div>
+                      {renderMailFallbackButtons(true)}
                     </div>
                   ) : submitDetails?.warning === "SMTP_ERROR" ? (
                     <div className="max-w-md mb-6 p-4 bg-slate-950 border border-red-500/10 rounded text-left space-y-3">
@@ -206,16 +264,7 @@ export default function Contact() {
                       <p className="text-slate-350 font-sans text-xs font-light leading-relaxed">
                         The mail dispatch failed. Details: <code className="bg-slate-900 border border-slate-800 text-red-400 px-1 py-0.5 rounded text-[10px] break-all font-mono block mt-1">{submitDetails.error || "Unknown credentials error"}</code>
                       </p>
-                      <p className="text-slate-400 font-sans text-xs font-light leading-relaxed pt-1.5 border-t border-white/5">
-                        Please check your SMTP configuration in settings. You can still transmit this message instantly using your local mail client:
-                      </p>
-                      <a
-                        href={mailtoUrl}
-                        className="inline-flex w-full items-center justify-center gap-2 py-2.5 px-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-bold uppercase tracking-wider rounded transition-colors"
-                      >
-                        <Mail className="w-3.5 h-3.5" />
-                        <span>Send via Mail Client</span>
-                      </a>
+                      {renderMailFallbackButtons(true)}
                     </div>
                   ) : (
                     <div className="max-w-md mb-6 p-4 bg-slate-950 border border-slate-850 rounded text-left space-y-3">
@@ -225,17 +274,7 @@ export default function Contact() {
                       <p className="text-slate-300 font-sans text-xs font-light leading-relaxed">
                         Your submission has been captured safely in the temporary server message buffer (you can verify it). However, SMTP keys are not configured in your settings.
                       </p>
-                      <p className="text-slate-400 font-sans text-xs font-light leading-relaxed">
-                        To receive it directly in your inbox, click below to instantly send it as an email via your mail client or app:
-                      </p>
-                      
-                      <a
-                        href={mailtoUrl}
-                        className="inline-flex w-full items-center justify-center gap-2 py-2.5 px-3 bg-blue-600 hover:bg-blue-500 text-white text-xs font-mono font-bold uppercase tracking-wider rounded transition-colors"
-                      >
-                        <Mail className="w-3.5 h-3.5" />
-                        <span>Send via Mail Client</span>
-                      </a>
+                      {renderMailFallbackButtons(true)}
                     </div>
                   )}
 
@@ -329,12 +368,10 @@ export default function Contact() {
 
                   {/* Submission Error Info */}
                   {status === "error" && (
-                    <div className="p-3 bg-red-950/20 border border-red-500/15 text-red-400 text-xs font-mono rounded flex flex-col gap-1.5 mt-3">
-                      <span className="font-bold">❌ Error Transmitting Payload:</span>
-                      <span>{errorMsg}</span>
-                      <a href={mailtoUrl} className="text-blue-400 hover:underline hover:text-blue-300 font-sans text-[11px] mt-1 flex items-center gap-1">
-                        ↳ Click here to send via direct mailto client instead.
-                      </a>
+                    <div className="p-4 bg-red-950/10 border border-red-500/15 rounded flex flex-col gap-1.5 mt-3">
+                      <span className="text-red-400 font-mono text-xs font-bold">❌ Error Transmitting Payload:</span>
+                      <span className="text-slate-400 text-xs leading-relaxed font-light">{errorMsg}</span>
+                      {renderMailFallbackButtons(true)}
                     </div>
                   )}
 
