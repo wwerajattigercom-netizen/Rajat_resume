@@ -78,7 +78,80 @@ export async function handleContactSubmission(req: Request, res: Response) {
     const smtpPort = smtpPortRaw ? parseInt(smtpPortRaw, 10) : 587;
     const toEmail = "panderajat27@gmail.com";
 
-    // Standard RFC check of SMTP variables presence
+    const emailHtml = `
+      <div style="font-family: sans-serif; padding: 24px; color: #1e293b; max-width: 600px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;">
+        <h2 style="color: #2563eb; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-top: 0; font-size: 18px; font-weight: 700;">New Portfolio Message Received</h2>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+          <tr>
+            <td style="padding: 6px 0; font-size: 13px; color: #64748b; width: 80px;"><strong>Name:</strong></td>
+            <td style="padding: 6px 0; font-size: 13px; color: #0f172a;">${cleanedName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; font-size: 13px; color: #64748b;"><strong>Email:</strong></td>
+            <td style="padding: 6px 0; font-size: 13px; color: #2563eb;"><a href="mailto:${cleanedEmail}" style="color: #2563eb; text-decoration: underline;">${cleanedEmail}</a></td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; font-size: 13px; color: #64748b;"><strong>Subject:</strong></td>
+            <td style="padding: 6px 0; font-size: 13px; color: #0f172a; font-weight: 500;">${cleanedSubject || "No Subject"}</td>
+          </tr>
+        </table>
+
+        <div style="background-color: #f8fafc; padding: 16px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #2563eb; font-size: 14px; color: #334155;">
+          <p style="margin: 0; white-space: pre-wrap; line-height: 1.6;">${cleanedMessage}</p>
+        </div>
+
+        <p style="font-size: 11px; color: #94a3b8; margin-top: 28px; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-bottom: 0; text-align: center;">
+          Submitted securely via Rajat Pande's Interactive Portfolio Hub • ${new Date().toLocaleString()}
+        </p>
+      </div>
+    `;
+
+    const emailSubject = `[Portfolio Lead] ${cleanedSubject || "New Message from " + cleanedName}`;
+    const emailText = `You received a new message from your Portfolio website contact form:\n\n` +
+          `Name: ${cleanedName}\n` +
+          `Email: ${cleanedEmail}\n` +
+          `Subject: ${cleanedSubject || "No Subject"}\n\n` +
+          `Message:\n${cleanedMessage}\n\n` +
+          `-----------------------------------------\n` +
+          `Submitted at: ${new Date().toLocaleString()}`;
+
+    // A. Check for HTTP REST-based Resend API first.
+    // HTTP bypasses ALL outbound firewall / port 465 / port 587 blocking on Render Free Tiers seamlessly. 
+    const resendApiKey = (process.env.RESEND_API_KEY || "").trim();
+    if (resendApiKey) {
+      console.log("RESEND_API_KEY detected. Utilizing premium HTTP REST API to dispatch message (bypassing SMTP port filters)...");
+      try {
+        const response = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${resendApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            from: "Rajat Portfolio <onboarding@resend.dev>",
+            to: toEmail,
+            reply_to: cleanedEmail,
+            subject: emailSubject,
+            text: emailText,
+            html: emailHtml,
+          }),
+        });
+
+        if (response.ok) {
+          const resJson = await response.json();
+          console.log("Resend HTTP API transmission succeeded! Email delivered. ID:", resJson.id);
+          return res.json({ success: true, emailSent: true, message: "Email sent successfully via Resend HTTP REST API!" });
+        } else {
+          const errMsg = await response.text();
+          throw new Error(`Resend REST API rejected payload: ${response.status} ${errMsg}`);
+        }
+      } catch (httpErr: any) {
+        console.error("Resend HTTP API failed, falling back to SMTP cascade tries:", httpErr);
+      }
+    }
+
+    // B. Standard SMTP check of variables presence
     if (smtpHost && smtpUser && smtpPass) {
       console.log(`Attempting cascading SMTP dispatch for user ${smtpUser}`);
 
@@ -86,42 +159,9 @@ export async function handleContactSubmission(req: Request, res: Response) {
         from: `"${cleanedName} (Portfolio Contact)" <${smtpUser}>`,
         replyTo: cleanedEmail,
         to: toEmail,
-        subject: `[Portfolio Lead] ${cleanedSubject || "New Message from " + cleanedName}`,
-        text: `You received a new message from your Portfolio website contact form:\n\n` +
-              `Name: ${cleanedName}\n` +
-              `Email: ${cleanedEmail}\n` +
-              `Subject: ${cleanedSubject || "No Subject"}\n\n` +
-              `Message:\n${cleanedMessage}\n\n` +
-              `-----------------------------------------\n` +
-              `Submitted at: ${new Date().toLocaleString()}`,
-        html: `
-          <div style="font-family: sans-serif; padding: 24px; color: #1e293b; max-width: 600px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;">
-            <h2 style="color: #2563eb; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-top: 0; font-size: 18px; font-weight: 700;">New Portfolio Message Received</h2>
-            
-            <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
-              <tr>
-                <td style="padding: 6px 0; font-size: 13px; color: #64748b; width: 80px;"><strong>Name:</strong></td>
-                <td style="padding: 6px 0; font-size: 13px; color: #0f172a;">${cleanedName}</td>
-              </tr>
-              <tr>
-                <td style="padding: 6px 0; font-size: 13px; color: #64748b;"><strong>Email:</strong></td>
-                <td style="padding: 6px 0; font-size: 13px; color: #2563eb;"><a href="mailto:${cleanedEmail}" style="color: #2563eb; text-decoration: underline;">${cleanedEmail}</a></td>
-              </tr>
-              <tr>
-                <td style="padding: 6px 0; font-size: 13px; color: #64748b;"><strong>Subject:</strong></td>
-                <td style="padding: 6px 0; font-size: 13px; color: #0f172a; font-weight: 500;">${cleanedSubject || "No Subject"}</td>
-              </tr>
-            </table>
-
-            <div style="background-color: #f8fafc; padding: 16px; border-radius: 6px; margin-top: 20px; border-left: 4px solid #2563eb; font-size: 14px; color: #334155;">
-              <p style="margin: 0; white-space: pre-wrap; line-height: 1.6;">${cleanedMessage}</p>
-            </div>
-
-            <p style="font-size: 11px; color: #94a3b8; margin-top: 28px; border-top: 1px solid #f1f5f9; padding-top: 12px; margin-bottom: 0; text-align: center;">
-              Submitted securely via Rajat Pande's Interactive Portfolio Hub • ${new Date().toLocaleString()}
-            </p>
-          </div>
-        `,
+        subject: emailSubject,
+        text: emailText,
+        html: emailHtml,
       };
 
       let emailSent = false;
