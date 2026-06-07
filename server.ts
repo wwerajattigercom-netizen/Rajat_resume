@@ -100,7 +100,7 @@ Now, reply to the user's latest query representing Rajat's background. Keep answ
     const lastUserMessage = messages[messages.length - 1]?.text || "";
     const lowerMessage = lastUserMessage.toLowerCase();
     
-    let fallbackText = "Hello! I am Rajat's Digital Copilot. Current Gemini API Key is not set up in Settings, but I can still tell you about Rajat's background! Rajat is a Senior SAP ABAP Consultant with over 5 years of experience delivering robust cloud integrations, SAP BTP extensions, RAP models, and AI solutions. ";
+    let fallbackText = "Hello! I am Rajat's Digital Copilot. I can certainly tell you all about Rajat's background! Rajat is a seasoned Senior SAP ABAP Consultant with over 5 years of experience delivering robust enterprise systems, SAP BTP extensions, RAP models, and AI solutions. ";
     
     if (lowerMessage.includes("experience") || lowerMessage.includes("background") || lowerMessage.includes("cv")) {
       fallbackText += "He has spent 5+ years building elite enterprise software. He previously held Consultant roles at SNP - VALIDATE (building MCP-based AI integrations, performing major database optimizations) and EXA AG (developing the OTP Extractor tool).";

@@ -80,35 +80,7 @@ export async function handleContactSubmission(req: Request, res: Response) {
 
     // Standard RFC check of SMTP variables presence
     if (smtpHost && smtpUser && smtpPass) {
-      console.log(`Attempting SMTP dispatch via host: ${smtpHost} / port: ${smtpPort} for user ${smtpUser}`);
-      
-      let transporter;
-      
-      // Gmail service helper bypasses many proxy/firewall/STARTTLS handshake issues on Cloud vendors (like Render)
-      if (smtpHost.toLowerCase().includes("gmail") || smtpUser.toLowerCase().endsWith("@gmail.com")) {
-        console.log("Utilizing standard 'gmail' service helper configuration for maximum compatibility on Render.");
-        transporter = nodemailer.createTransport({
-          service: "gmail",
-          auth: {
-            user: smtpUser,
-            pass: smtpPass,
-          },
-        });
-      } else {
-        transporter = nodemailer.createTransport({
-          host: smtpHost,
-          port: smtpPort,
-          secure: smtpPort === 465, // True for 465, false for 587/others
-          auth: {
-            user: smtpUser,
-            pass: smtpPass,
-          },
-          tls: {
-            rejectUnauthorized: false, // Bypasses self-signed or intermediate SSL trust store errors in cloud containers
-          },
-          timeout: 10000, // 10 seconds timeout
-        } as any);
-      }
+      console.log(`Attempting cascading SMTP dispatch for user ${smtpUser}`);
 
       const mailOptions = {
         from: `"${cleanedName} (Portfolio Contact)" <${smtpUser}>`,
@@ -152,9 +124,94 @@ export async function handleContactSubmission(req: Request, res: Response) {
         `,
       };
 
-      await transporter.sendMail(mailOptions);
-      console.log(`Email successfully forwarded via SMTP to ${toEmail}`);
-      return res.json({ success: true, emailSent: true, message: "Email sent successfully!" });
+      let emailSent = false;
+      let lastError: any = null;
+
+      // Attempt 1: Direct 'gmail' service helper (uses pre-configured Google SMTP options)
+      if (smtpHost.toLowerCase().includes("gmail") || smtpUser.toLowerCase().endsWith("@gmail.com")) {
+        try {
+          console.log("SMTP Attempt 1: Standard 'gmail' helper...");
+          const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+              user: smtpUser,
+              pass: smtpPass,
+            },
+            connectionTimeout: 8000,
+            greetingTimeout: 8000,
+            socketTimeout: 10000,
+          });
+          await transporter.sendMail(mailOptions);
+          emailSent = true;
+          console.log("SMTP Attempt 1 (gmail helper) Succeeded!");
+        } catch (err1) {
+          console.warn("SMTP Attempt 1 (gmail helper) Failed:", err1);
+          lastError = err1;
+        }
+      }
+
+      // Attempt 2: Direct SMTP over SSL Port 465 (highly robust, bypassing STARTTLS port restrictions on cloud hosts)
+      if (!emailSent) {
+        try {
+          console.log("SMTP Attempt 2: Direct smtp.gmail.com over Secure SSL Port 465...");
+          const transporter = nodemailer.createTransport({
+            host: "smtp.gmail.com",
+            port: 465,
+            secure: true,
+            auth: {
+              user: smtpUser,
+              pass: smtpPass,
+            },
+            tls: {
+              rejectUnauthorized: false,
+            },
+            connectionTimeout: 8000,
+            greetingTimeout: 8000,
+            socketTimeout: 10000,
+          } as any);
+          await transporter.sendMail(mailOptions);
+          emailSent = true;
+          console.log("SMTP Attempt 2 (Port 465 SSL) Succeeded!");
+        } catch (err2) {
+          console.warn("SMTP Attempt 2 (Port 465 SSL) Failed:", err2);
+          lastError = err2;
+        }
+      }
+
+      // Attempt 3: Outbound SMTP over Port 587 (STARTTLS)
+      if (!emailSent) {
+        try {
+          console.log(`SMTP Attempt 3: Host ${smtpHost} over STARTTLS Port ${smtpPort === 465 ? 587 : smtpPort}...`);
+          const transporter = nodemailer.createTransport({
+            host: smtpHost,
+            port: smtpPort === 465 ? 587 : smtpPort,
+            secure: false, // TLS on 587 is STARTTLS
+            auth: {
+              user: smtpUser,
+              pass: smtpPass,
+            },
+            tls: {
+              rejectUnauthorized: false,
+            },
+            connectionTimeout: 8000,
+            greetingTimeout: 8000,
+            socketTimeout: 10050,
+          } as any);
+          await transporter.sendMail(mailOptions);
+          emailSent = true;
+          console.log("SMTP Attempt 3 (Port 587 STARTTLS) Succeeded!");
+        } catch (err3) {
+          console.warn("SMTP Attempt 3 (Port 587 STARTTLS) Failed:", err3);
+          lastError = err3;
+        }
+      }
+
+      if (emailSent) {
+        console.log(`Email successfully forwarded via SMTP to ${toEmail}`);
+        return res.json({ success: true, emailSent: true, message: "Email sent successfully!" });
+      } else {
+        throw lastError || new Error("All cascading SMTP delivery attempts timed out or failed.");
+      }
     } else {
       console.log("SMTP not fully configured. Stored in memory local-pool only.");
       return res.json({
