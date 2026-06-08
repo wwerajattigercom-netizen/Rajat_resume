@@ -82,7 +82,7 @@ export async function handleContactSubmission(req: Request, res: Response) {
     }
 
     const smtpPort = smtpPortRaw ? parseInt(smtpPortRaw, 10) : 587;
-    const toEmail = (process.env.TO_EMAIL || "panderajat27@gmail.com").trim();
+    const toEmail = (process.env.TO_EMAIL || "wwe.rajattiger.com@gmail.com").trim().replace(/^['"]|['"]$/g, "");
 
     const emailHtml = `
       <div style="font-family: sans-serif; padding: 24px; color: #1e293b; max-width: 600px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;">
@@ -125,9 +125,14 @@ export async function handleContactSubmission(req: Request, res: Response) {
 
     // A. Check for HTTP REST-based Resend API first.
     // HTTP bypasses ALL outbound firewall / port 465 / port 587 blocking on Render Free Tiers seamlessly. 
-    const resendApiKey = (process.env.RESEND_API_KEY || "").trim();
+    const rawResendKey = process.env.RESEND_API_KEY || "";
+    const resendApiKey = rawResendKey
+      .replace(/[^a-zA-Z0-9_]/g, "")
+      .trim();
+
     if (resendApiKey) {
-      console.log("RESEND_API_KEY detected. Utilizing premium HTTP REST API to dispatch message (bypassing SMTP port filters)...");
+      console.log(`RESEND_API_KEY loaded securely. Length: ${resendApiKey.length} characters. Prefix: "${resendApiKey.substring(0, 5)}...".`);
+      console.log("Utilizing premium HTTP REST API to dispatch message (bypassing SMTP port filters)...");
       try {
         const response = await fetch("https://api.resend.com/emails", {
           method: "POST",
