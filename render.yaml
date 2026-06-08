@@ -14,4 +14,4 @@ envVarGroups:
   - name: Rajat_resume
     envVars:
       - key: RESEND_API_KEY
-        value: re_f7uZr3GM_HUVr7jQrW85Dn6bE3PAviHKs
+        value: re_MQ3qzBXC_Na9h74Zu4SXL1fA3frRVKqw8
