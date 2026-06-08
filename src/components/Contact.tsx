@@ -256,16 +256,76 @@ export default function Contact() {
                       {renderMailFallbackButtons(true)}
                     </div>
                   ) : submitDetails?.warning === "SMTP_ERROR" ? (
-                    <div className="max-w-md mb-6 p-4 bg-slate-950 border border-red-500/10 rounded text-left space-y-3">
-                      <div className="flex items-center gap-2 text-red-500">
-                        <AlertCircle className="w-4 h-4" />
-                        <span className="font-mono text-[11px] uppercase font-bold tracking-wider">SMTP Delivery Failure</span>
-                      </div>
-                      <p className="text-slate-350 font-sans text-xs font-light leading-relaxed">
-                        The mail dispatch failed. Details: <code className="bg-slate-900 border border-slate-800 text-red-400 px-1 py-0.5 rounded text-[10px] break-all font-mono block mt-1">{submitDetails.error || "Unknown credentials error"}</code>
-                      </p>
-                      {renderMailFallbackButtons(true)}
-                    </div>
+                    (() => {
+                      const isResendInvalidKey = !!(
+                        submitDetails.error &&
+                        (submitDetails.error.includes("Status 401") ||
+                          submitDetails.error.includes("API key is invalid") ||
+                          submitDetails.error.includes("validation_error"))
+                      );
+
+                      if (isResendInvalidKey) {
+                        return (
+                          <div className="max-w-md mb-6 p-5 bg-slate-950 border border-red-500/10 rounded text-left space-y-4">
+                            <div className="flex items-start gap-2.5">
+                              <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-red-500 font-mono text-[11px] uppercase font-bold tracking-wider leading-none">
+                                  Resend API Key Invalid (401 Unauthorized)
+                                </p>
+                                <p className="text-slate-400 font-sans text-[11px] mt-1 font-light leading-relaxed">
+                                  Your email dispatch has failed because Resend rejected your <code className="text-red-400 font-mono font-bold bg-slate-900 px-1 py-0.5 rounded">RESEND_API_KEY</code> as invalid.
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="border-t border-white/5 pt-3.5 space-y-2 text-xs font-sans text-slate-300 font-light font-sans">
+                              <p className="font-semibold text-white text-[11px] uppercase tracking-wider text-rose-400">🚨 Standard Root Causes:</p>
+                              <ol className="list-decimal pl-4 space-y-2 text-slate-400 text-[11px] leading-relaxed">
+                                <li>
+                                  <strong className="text-white">Wrong Key Pasted (Render Token instead of Resend):</strong>
+                                  <p className="mt-0.5">Please check if the key you configured starts with <code className="text-yellow-400 font-mono">rnd_</code>. If so, that is a Render token! Resend API keys must start with <code className="text-emerald-400 font-mono">re_</code>.</p>
+                                </li>
+                                <li>
+                                  <strong className="text-white">Incomplete copy-paste:</strong>
+                                  <p className="mt-0.5">Double check you copied the entire key from the Resend console.</p>
+                                </li>
+                                <li>
+                                  <strong className="text-white">Resend Free-Tier Restriction (TO_EMAIL mismatch):</strong>
+                                  <p className="mt-0.5">On Free Resend tiers, you can only deliver emails to the email address that registered the Resend account (such as <code className="text-emerald-400 font-mono">wwe.rajattiger.com@gmail.com</code>). Verify that the <code className="text-amber-400 font-mono">TO_EMAIL</code> setting matches this exactly, or verify your domain.</p>
+                                </li>
+                              </ol>
+                            </div>
+
+                            <div className="border-t border-white/5 pt-3.5 space-y-2 text-xs font-sans text-slate-350 font-light">
+                              <p className="font-semibold text-white text-[11px]">How to resolve this in Render dashboard:</p>
+                              <ol className="list-decimal pl-4 space-y-1.5 text-slate-400 text-[11px]">
+                                <li>Go to your <a href="https://resend.com/api-keys" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline font-medium">Resend API Keys Console</a> and copy/generate a real key starting with <code className="text-emerald-400 font-mono">re_</code>.</li>
+                                <li>Go to your <a href="https://dashboard.render.com" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline font-medium">Render Dashboard</a>.</li>
+                                <li>Click on <strong className="text-white">Env Groups</strong> on the left side menu.</li>
+                                <li>Locate the <code className="bg-slate-900 border border-slate-800 text-slate-300 font-mono px-1 py-0.5 rounded text-[10px]">Rajat_resume</code> group.</li>
+                                <li>Update the value of <code className="font-mono text-emerald-400">RESEND_API_KEY</code> with your real Resend key, and save. Render will redeploy your app automatically!</li>
+                              </ol>
+                            </div>
+
+                            {renderMailFallbackButtons(true)}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="max-w-md mb-6 p-4 bg-slate-950 border border-red-500/10 rounded text-left space-y-3">
+                          <div className="flex items-center gap-2 text-red-500">
+                            <AlertCircle className="w-4 h-4" />
+                            <span className="font-mono text-[11px] uppercase font-bold tracking-wider">SMTP Delivery Failure</span>
+                          </div>
+                          <p className="text-slate-350 font-sans text-xs font-light leading-relaxed">
+                            The mail dispatch failed. Details: <code className="bg-slate-900 border border-slate-800 text-red-400 px-1 py-0.5 rounded text-[10px] break-all font-mono block mt-1">{submitDetails.error || "Unknown credentials error"}</code>
+                          </p>
+                          {renderMailFallbackButtons(true)}
+                        </div>
+                      );
+                    })()
                   ) : (
                     <div className="max-w-md mb-6 p-4 bg-slate-950 border border-slate-850 rounded text-left space-y-3">
                       <p className="text-amber-500 font-mono text-[10px] uppercase font-bold tracking-wider flex items-center gap-1.5 leading-none">

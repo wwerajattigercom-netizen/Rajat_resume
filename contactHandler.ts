@@ -66,10 +66,15 @@ export async function handleContactSubmission(req: Request, res: Response) {
     let smtpHost = (process.env.SMTP_HOST || "").trim();
     let smtpPortRaw = (process.env.SMTP_PORT || "").trim();
 
-    // If environment variables are empty, invalid, or do not look like a 16-character app password,
-    // we use the master credentials provided by Rajat:
+    // Check if the configured host looks like it is Google/Gmail
+    const isGmailService = smtpHost.toLowerCase().includes("gmail") || smtpUser.toLowerCase().endsWith("@gmail.com");
+
+    // Only force fallback to MASTER if user has not provided SMTP_USER/SMTP_PASS,
+    // OR if they provided a Gmail address but did not provide a valid 16-char app password format:
     const isAppPasswordFormat = smtpPass.replace(/\s/g, "").length === 16;
-    if (!smtpUser || !smtpPass || !isAppPasswordFormat || smtpUser.includes("panderajat27")) {
+    const shouldFallbackToMaster = !smtpUser || !smtpPass || (isGmailService && !isAppPasswordFormat) || smtpUser.includes("panderajat27");
+
+    if (shouldFallbackToMaster) {
       smtpUser = MASTER_SMTP_USER;
       smtpPass = MASTER_SMTP_PASS;
       smtpHost = MASTER_SMTP_HOST;
@@ -171,7 +176,7 @@ export async function handleContactSubmission(req: Request, res: Response) {
       let emailSent = false;
       let lastError: any = null;
 
-      // Attempt 1: Direct 'gmail' service helper (uses pre-configured Google SMTP options)
+      // Attempt 1: Contact standard Gmail service helper (if Gmail domain or gmail host is specified)
       if (smtpHost.toLowerCase().includes("gmail") || smtpUser.toLowerCase().endsWith("@gmail.com")) {
         try {
           console.log("SMTP Attempt 1: Standard 'gmail' helper...");
@@ -194,12 +199,41 @@ export async function handleContactSubmission(req: Request, res: Response) {
         }
       }
 
-      // Attempt 2: Direct SMTP over SSL Port 465 (highly robust, bypassing STARTTLS port restrictions on cloud hosts)
+      // Attempt 2: Precise custom port transmission (e.g. standard fallback Port 2525, 80, 8080, etc.)
+      // This is highly recommended to bypass general cloud outbound blocks on standard mail ports!
       if (!emailSent) {
         try {
-          console.log("SMTP Attempt 2: Direct smtp.gmail.com over Secure SSL Port 465...");
+          console.log(`SMTP Attempt 2: Target host ${smtpHost} over specified Port ${smtpPort}...`);
           const transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
+            host: smtpHost,
+            port: smtpPort,
+            secure: smtpPort === 465, // True ONLY if standard SSL port 465 is explicitly requested
+            auth: {
+              user: smtpUser,
+              pass: smtpPass,
+            },
+            tls: {
+              rejectUnauthorized: false,
+            },
+            connectionTimeout: 8500,
+            greetingTimeout: 8500,
+            socketTimeout: 10500,
+          } as any);
+          await transporter.sendMail(mailOptions);
+          emailSent = true;
+          console.log(`SMTP Attempt 2 (Port ${smtpPort}) Succeeded!`);
+        } catch (err2) {
+          console.warn(`SMTP Attempt 2 (Port ${smtpPort}) Failed:`, err2);
+          lastError = err2;
+        }
+      }
+
+      // Attempt 3: Outbound SMTP over standard SSL Port 465 (fallback)
+      if (!emailSent && smtpPort !== 465) {
+        try {
+          console.log(`SMTP Attempt 3: Outbound to ${smtpHost} over default SSL Port 465...`);
+          const transporter = nodemailer.createTransport({
+            host: smtpHost,
             port: 465,
             secure: true,
             auth: {
@@ -215,20 +249,20 @@ export async function handleContactSubmission(req: Request, res: Response) {
           } as any);
           await transporter.sendMail(mailOptions);
           emailSent = true;
-          console.log("SMTP Attempt 2 (Port 465 SSL) Succeeded!");
-        } catch (err2) {
-          console.warn("SMTP Attempt 2 (Port 465 SSL) Failed:", err2);
-          lastError = err2;
+          console.log("SMTP Attempt 3 (Port 465 SSL Fallback) Succeeded!");
+        } catch (err3) {
+          console.warn("SMTP Attempt 3 (Port 465 SSL Fallback) Failed:", err3);
+          lastError = err3;
         }
       }
 
-      // Attempt 3: Outbound SMTP over Port 587 (STARTTLS)
-      if (!emailSent) {
+      // Attempt 4: Outbound SMTP over STARTTLS Port 587 (fallback)
+      if (!emailSent && smtpPort !== 587) {
         try {
-          console.log(`SMTP Attempt 3: Host ${smtpHost} over STARTTLS Port ${smtpPort === 465 ? 587 : smtpPort}...`);
+          console.log(`SMTP Attempt 4: Outbound to ${smtpHost} over STARTTLS Port 587...`);
           const transporter = nodemailer.createTransport({
             host: smtpHost,
-            port: smtpPort === 465 ? 587 : smtpPort,
+            port: 587,
             secure: false, // TLS on 587 is STARTTLS
             auth: {
               user: smtpUser,
@@ -243,10 +277,10 @@ export async function handleContactSubmission(req: Request, res: Response) {
           } as any);
           await transporter.sendMail(mailOptions);
           emailSent = true;
-          console.log("SMTP Attempt 3 (Port 587 STARTTLS) Succeeded!");
-        } catch (err3) {
-          console.warn("SMTP Attempt 3 (Port 587 STARTTLS) Failed:", err3);
-          lastError = err3;
+          console.log("SMTP Attempt 4 (Port 587 STARTTLS Fallback) Succeeded!");
+        } catch (err4) {
+          console.warn("SMTP Attempt 4 (Port 587 STARTTLS Fallback) Failed:", err4);
+          lastError = err4;
         }
       }
 
@@ -254,7 +288,7 @@ export async function handleContactSubmission(req: Request, res: Response) {
         console.log(`Email successfully forwarded via SMTP to ${toEmail}`);
         return res.json({ success: true, emailSent: true, message: "Email sent successfully!" });
       } else {
-        throw lastError || new Error("All cascading SMTP delivery attempts timed out or failed.");
+        throw lastError || new Error("All cascading SMTP delivery attempts (including custom configurations) timed out or failed on Render network.");
       }
     } else {
       console.log("SMTP not fully configured. Stored in memory local-pool only.");
