@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, useScroll, useSpring, AnimatePresence } from "motion/react";
-import { Menu, X, Terminal, Cpu, MessageSquare, ArrowUp, Briefcase, Sparkles, Send, Mail } from "lucide-react";
+import { Menu, X, Terminal, Cpu, MessageSquare, ArrowUp, Briefcase, Sparkles, Send, Mail, Download } from "lucide-react";
 import { PORTFOLIO_OWNER } from "./data";
 
 // Sub-component imports
@@ -16,7 +16,7 @@ import Expertise from "./components/Expertise";
 import CareerTimeline from "./components/CareerTimeline";
 import FeaturedImpact from "./components/FeaturedImpact";
 import ModernSAP from "./components/ModernSAP";
-import ThoughtLeadership from "./components/ThoughtLeadership";
+import CleanCoreSimulator from "./components/CleanCoreSimulator";
 import TechStack from "./components/TechStack";
 import Contact from "./components/Contact";
 import AICopilot from "./components/AICopilot";
@@ -25,6 +25,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
+  const [theme, setTheme] = useState<"dark" | "warm">("dark");
 
   // Read scroll progress for elegant progress bar indicator
   const { scrollYProgress } = useScroll();
@@ -39,7 +40,7 @@ export default function App() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
 
-      const sections = ["about", "expertise", "experience", "impact", "modern-sap", "insights", "tech-stack", "contact"];
+      const sections = ["about", "expertise", "experience", "impact", "modern-sap", "custom-sandbox", "tech-stack", "contact"];
       const scrollPos = window.scrollY + 200;
 
       for (const section of sections) {
@@ -82,13 +83,13 @@ export default function App() {
     { label: "Timeline", id: "experience" },
     { label: "Impact", id: "impact" },
     { label: "Modern SAP", id: "modern-sap" },
-    { label: "Thought Leadership", id: "insights" },
+    { label: "RAP Sandbox", id: "custom-sandbox" },
     { label: "Core Stack", id: "tech-stack" },
     { label: "Contact", id: "contact" }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-500/30 selection:text-white">
+    <div className={`min-h-screen ${theme === "warm" ? "theme-warm bg-stone-950" : "bg-slate-950"} text-slate-100 flex flex-col font-sans selection:bg-blue-500/30 selection:text-white transition-colors duration-500`}>
       
       {/* 1. Global Reading Progress Indicator */}
       <motion.div 
@@ -141,6 +142,36 @@ export default function App() {
 
           {/* Connect Button CTA */}
           <div className="hidden lg:flex items-center gap-3">
+            {/* Theme Vibe Switcher (Warm Mode vs Dark Mode) */}
+            <button
+              onClick={() => setTheme(theme === "dark" ? "warm" : "dark")}
+              type="button"
+              className="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-900/60 hover:bg-slate-900 border border-slate-850 font-mono text-xs text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+              title="Toggle Cozy Warm Mode / Dark Mode"
+            >
+              {theme === "dark" ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                  <span className="text-amber-400 text-[10px] font-bold uppercase tracking-wider">Warm Mode</span>
+                </>
+              ) : (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-blue-400" />
+                  <span className="text-blue-400 text-[10px] font-bold uppercase tracking-wider">Dark Mode</span>
+                </>
+              )}
+            </button>
+
+            <a
+              href="/resume.pdf"
+              download="Rajat_Pande_Resume.pdf"
+              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-blue-600/10 hover:bg-blue-600 border border-blue-500/30 font-mono text-[11px] text-blue-400 hover:text-white rounded transition-colors cursor-pointer"
+              title="Download Resume (PDF)"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download CV (PDF)</span>
+            </a>
+
             <button
               onClick={() => scrollToSection("contact")}
               className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 font-mono text-xs text-blue-400 hover:text-cyan-400 rounded transition-colors cursor-pointer"
@@ -181,6 +212,26 @@ export default function App() {
                 {item.label}
               </button>
             ))}
+            {/* Mobile Theme Switcher */}
+            <button
+              onClick={() => setTheme(theme === "dark" ? "warm" : "dark")}
+              type="button"
+              className="w-full flex items-center justify-between p-3.5 bg-slate-900 border border-white/5 font-mono text-xs text-slate-300 rounded transition-colors cursor-pointer mt-2"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-wider">Workspace Vibe</span>
+              {theme === "dark" ? (
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+                  <span className="text-amber-400 font-bold uppercase text-[9px] tracking-wider">Warm Mode</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-400" />
+                  <span className="text-blue-400 font-bold uppercase text-[9px] tracking-wider">Dark Mode</span>
+                </div>
+              )}
+            </button>
+
             <button
               onClick={() => scrollToSection("contact")}
               className="w-full flex items-center justify-center gap-2 py-2.5 mt-2 bg-blue-600 text-white text-xs font-semibold rounded cursor-pointer"
@@ -188,6 +239,15 @@ export default function App() {
               <Mail className="w-4 h-4" />
               <span>Get In Touch</span>
             </button>
+
+            <a
+              href="/resume.pdf"
+              download="Rajat_Pande_Resume.pdf"
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-blue-400 text-xs font-semibold rounded cursor-pointer animate-pulse"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download CV (PDF)</span>
+            </a>
           </motion.div>
         )}
       </AnimatePresence>
@@ -204,7 +264,7 @@ export default function App() {
         <CareerTimeline />
         <FeaturedImpact />
         <ModernSAP />
-        <ThoughtLeadership />
+        <CleanCoreSimulator />
         <TechStack />
         <Contact />
       </main>

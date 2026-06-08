@@ -4,7 +4,7 @@
  */
 
 import { motion } from "motion/react";
-import { ArrowRight, Sparkles, Network, Database, Cpu, Cloud, Code } from "lucide-react";
+import { ArrowRight, Sparkles, Network, Database, Cpu, Cloud, Code, Download } from "lucide-react";
 
 export default function Hero({ onViewExperience, onConnect }: { onViewExperience: () => void, onConnect: () => void }) {
   const nodes = [
@@ -69,17 +69,28 @@ export default function Hero({ onViewExperience, onConnect }: { onViewExperience
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
-            className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4"
+            className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 flex-wrap"
           >
+            <a
+              href="/resume.pdf"
+              download="Rajat_Pande_Resume.pdf"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 border border-blue-500/20 text-white font-semibold rounded-lg transition-all duration-200 w-full sm:w-auto shadow-md shadow-blue-500/10 hover:shadow-blue-500/20 cursor-pointer text-sm"
+              title="Download Resume in PDF Format"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download PDF Resume</span>
+            </a>
+
             <button
               onClick={onViewExperience}
-              className="px-8 py-3 bg-white text-slate-950 font-semibold rounded hover:bg-blue-400 hover:text-white transition-all duration-200 w-full sm:w-auto shadow-lg shadow-black/20 cursor-pointer text-sm"
+              className="px-6 py-3 bg-slate-900 border border-slate-800 text-slate-300 font-semibold rounded-lg hover:border-slate-700 hover:text-white transition-all duration-200 w-full sm:w-auto cursor-pointer text-sm"
             >
               View Experience
             </button>
+
             <button
               onClick={onConnect}
-              className="px-8 py-3 bg-slate-900 hover:bg-slate-800 border border-slate-700 text-white font-semibold rounded transition-all duration-200 w-full sm:w-auto cursor-pointer text-sm"
+              className="px-6 py-3 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-white font-semibold rounded-lg transition-all duration-200 w-full sm:w-auto cursor-pointer text-sm"
             >
               Let's Connect
             </button>

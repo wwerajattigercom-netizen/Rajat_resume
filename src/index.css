@@ -42,3 +42,88 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #3b82f6;
 }
+
+/* -----------------------------------------
+   Cozy Amber / Warm Mode Theme Overrides
+   Eye-safe warm incandescent glow color palette
+   ----------------------------------------- */
+.theme-warm {
+  --theme-bg: #120e0a;
+  --theme-card: #1c1511;
+  --theme-border: rgba(180, 83, 9, 0.16);
+  --theme-text-primary: #faf5f0;
+  --theme-text-secondary: #cab8a9;
+  --theme-accent: #f59e0b;
+}
+
+.theme-warm, .theme-warm html {
+  background-color: #120e0a !important;
+  color: #faf5f0 !important;
+}
+
+/* Warm Mode Background Overrides */
+.theme-warm .bg-slate-950,
+.theme-warm header,
+.theme-warm footer {
+  background-color: #120e0a !important;
+}
+
+.theme-warm .bg-slate-900,
+.theme-warm .bg-slate-900\/10,
+.theme-warm .bg-slate-950 {
+  background-color: #1d1612 !important;
+}
+
+.theme-warm .border-white\/5,
+.theme-warm .border-slate-850,
+.theme-warm .border-slate-800,
+.theme-warm .border-slate-750 {
+  border-color: rgba(180, 83, 9, 0.16) !important;
+}
+
+/* Accent Colors (Shift blue to beautiful warm amber/orange) */
+.theme-warm .text-blue-500,
+.theme-warm .text-blue-400,
+.theme-warm .text-cyan-400 {
+  color: #f59e0b !important;
+}
+
+.theme-warm .bg-blue-500,
+.theme-warm .bg-blue-600,
+.theme-warm .bg-blue-650 {
+  background-color: #d97706 !important;
+}
+
+.theme-warm .bg-blue-500\/10 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+}
+
+.theme-warm .border-blue-500\/20,
+.theme-warm .border-blue-500\/30 {
+  border-color: rgba(245, 158, 11, 0.25) !important;
+}
+
+.theme-warm .text-slate-400,
+.theme-warm .text-slate-405 {
+  color: #cbbba9 !important;
+}
+
+.theme-warm .text-slate-500 {
+  color: #8f7967 !important;
+}
+
+.theme-warm .text-emerald-450,
+.theme-warm .text-emerald-400 {
+  color: #eab308 !important;
+}
+
+/* Warm Scrollbars */
+.theme-warm ::-webkit-scrollbar-track {
+  background: #120e0a;
+}
+.theme-warm ::-webkit-scrollbar-thumb {
+  background: #2b211a;
+}
+.theme-warm ::-webkit-scrollbar-thumb:hover {
+  background: #f59e0b;
+}

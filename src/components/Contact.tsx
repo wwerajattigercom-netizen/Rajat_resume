@@ -3,22 +3,44 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
-import { motion } from "motion/react";
-import { Mail, MapPin, Globe, Linkedin, Send, BadgeCheck, AlertCircle, Copy } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { 
+  Mail, MapPin, Globe, Github, Send, 
+  BadgeCheck, Copy, Check, Clock, ExternalLink, Sparkles, Cpu 
+} from "lucide-react";
 import { PORTFOLIO_OWNER } from "../data";
 
 export default function Contact() {
   const [formData, setFormData] = useState({ name: "", email: "", subject: "", message: "" });
-  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
-  const [submitDetails, setSubmitDetails] = useState<{ emailSent: boolean; warning?: string; error?: string } | null>(null);
-  const [errorMsg, setErrorMsg] = useState("");
-  const [lastSubmittedData, setLastSubmittedData] = useState<typeof formData | null>(null);
   const [copiedEmail, setCopiedEmail] = useState(false);
-  const [copiedBody, setCopiedBody] = useState(false);
+  const [copiedPayload, setCopiedPayload] = useState(false);
+  const [packagerState, setPackagerState] = useState<"idle" | "packaging" | "ready">("idle");
+  const [timeStr, setTimeStr] = useState("");
+
+  // Live Timezone Tracker (India standard time - IST - UTC+5.30)
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      // Format to IST
+      const options: Intl.DateTimeFormatOptions = {
+        timeZone: "Asia/Kolkata",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true
+      };
+      const formatter = new Intl.DateTimeFormat("en-US", options);
+      setTimeStr(formatter.format(now));
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleCopyEmail = () => {
-    navigator.clipboard.writeText("panderajat27@gmail.com")
+    navigator.clipboard.writeText(PORTFOLIO_OWNER.email)
       .then(() => {
         setCopiedEmail(true);
         setTimeout(() => setCopiedEmail(false), 2000);
@@ -27,416 +49,339 @@ export default function Contact() {
   };
 
   const getMailText = () => {
-    const data = lastSubmittedData || formData;
-    return `Hi Rajat,\n\nI submitted the following message via your portfolio website:\n\n` +
-      `-----------------------------------------\n` +
-      `From: ${data.name || "Anon"} <${data.email || "anon@example.com"}>\n` +
-      `Subject: ${data.subject || "No Subject"}\n\n` +
-      `Message:\n${data.message || ""}\n` +
-      `-----------------------------------------\n\n` +
-      `Best regards,\n${data.name || "Anon"}`;
+    return `Hi Rajat,\n\nNice to connect with you! I was exploring your premium SAP Portfolio Hub and wanted to reach out.\n\n` +
+      `Here are my details:\n` +
+      `- Name: ${formData.name || "Colleague / Visitor"}\n` +
+      `- Email: ${formData.email || "visitor@example.com"}\n` +
+      `- Topic of Interest: ${formData.subject || "Collaboration & SAP Discussion"}\n\n` +
+      `Message Details:\n` +
+      `"${formData.message || "Great connecting with you!"}"\n\n` +
+      `Looking forward to having a conversation!`;
   };
 
-  const handleCopyBody = () => {
+  const handleCopyPayload = () => {
     const text = getMailText();
     navigator.clipboard.writeText(text)
       .then(() => {
-        setCopiedBody(true);
-        setTimeout(() => setCopiedBody(false), 2000);
+        setCopiedPayload(true);
+        setTimeout(() => setCopiedPayload(false), 2000);
       })
-      .catch((err) => console.error("Could not copy body:", err));
+      .catch((err) => console.error("Could not copy payload:", err));
+  };
+
+  const handlePackageMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.email || !formData.message) return;
+
+    setPackagerState("packaging");
+    setTimeout(() => {
+      setPackagerState("ready");
+    }, 1200);
   };
 
   const getMailtoUrl = () => {
-    const data = lastSubmittedData || formData;
     const text = getMailText();
-    return `mailto:panderajat27@gmail.com?subject=${encodeURIComponent(data.subject || `Portfolio Message from ${data.name || "Visitor"}`)}&body=${encodeURIComponent(text)}`;
+    const mailSubject = formData.subject || `SAP Discussion request from ${formData.name || "Discovery Lead"}`;
+    return `mailto:${PORTFOLIO_OWNER.email}?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(text)}`;
   };
 
-  const mailtoUrl = getMailtoUrl();
-
-  const renderMailFallbackButtons = (showWarningNote: boolean = true) => {
-    return (
-      <div className="border-t border-white/5 pt-4 mt-4 space-y-3">
-        {showWarningNote && (
-          <p className="text-slate-400 font-sans text-xs font-light leading-relaxed">
-            Due to your browser's security policies inside the sandboxed preview iframe, directly launching mail clients might be restricted. Recommend using the <strong className="text-white font-medium">Copy buttons</strong> below as a guaranteed backup:
-          </p>
-        )}
-        <div className="flex flex-col sm:flex-row gap-2">
-          <a
-            href={mailtoUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 px-3 bg-blue-650 hover:bg-blue-550 text-white text-xs font-mono font-bold uppercase tracking-wider rounded transition-colors"
-          >
-            <Mail className="w-3.5 h-3.5" />
-            <span>Launch Mail Client</span>
-          </a>
-          
-          <button
-            type="button"
-            onClick={handleCopyEmail}
-            className="inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-mono rounded transition-colors cursor-pointer"
-          >
-            {copiedEmail ? <BadgeCheck className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copiedEmail ? "Email Copied!" : "Copy Recipient"}</span>
-          </button>
-          
-          <button
-            type="button"
-            onClick={handleCopyBody}
-            className="inline-flex items-center justify-center gap-1.5 py-2 px-3 bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white text-[11px] font-mono rounded transition-colors cursor-pointer"
-          >
-            {copiedBody ? <BadgeCheck className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copiedBody ? "Text Copied!" : "Copy Msg Text"}</span>
-          </button>
-        </div>
-      </div>
-    );
+  const getGmailUrl = () => {
+    const text = getMailText();
+    const mailSubject = formData.subject || `SAP Discussion request from ${formData.name || "Discovery Lead"}`;
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(PORTFOLIO_OWNER.email)}&su=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(text)}`;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) return;
-    
-    setStatus("sending");
-    setErrorMsg("");
-    setSubmitDetails(null);
-    setLastSubmittedData({ ...formData });
-
-    try {
-      const response = await fetch("/api/contact", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server returned status code ${response.status}`);
-      }
-
-      const data = await response.json();
-      setSubmitDetails({
-        emailSent: data.emailSent,
-        warning: data.warning,
-        error: data.error,
-      });
-      setStatus("success");
-      setFormData({ name: "", email: "", subject: "", message: "" });
-    } catch (err: any) {
-      console.error("Submission error:", err);
-      setErrorMsg(err.message || "Failed to reach backend endpoint.");
-      setStatus("error");
-    }
+  const getOutlookUrl = () => {
+    const text = getMailText();
+    const mailSubject = formData.subject || `SAP Discussion request from ${formData.name || "Discovery Lead"}`;
+    return `https://outlook.live.com/mail/0/deeplink/compose?to=${encodeURIComponent(PORTFOLIO_OWNER.email)}&subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(text)}`;
   };
 
-  const isGoogleAppPasswordErr = !!(submitDetails?.error && (
-    submitDetails.error.toLowerCase().includes("application-specific") ||
-    submitDetails.error.includes("534-5.7.9") ||
-    submitDetails.error.toLowerCase().includes("app password") ||
-    submitDetails.error.toLowerCase().includes("app-specific")
-  ));
+  const getYahooUrl = () => {
+    const text = getMailText();
+    const mailSubject = formData.subject || `SAP Discussion request from ${formData.name || "Discovery Lead"}`;
+    return `https://compose.mail.yahoo.com/?to=${encodeURIComponent(PORTFOLIO_OWNER.email)}&subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(text)}`;
+  };
 
   return (
-    <section id="contact" className="py-24 px-4 md:px-8 border-b border-white/5 bg-slate-950 relative">
-      <div className="absolute bottom-10 left-10 w-96 h-96 bg-blue-900/5 rounded-full blur-[100px] pointer-events-none" />
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+    <section id="contact" className="py-24 px-4 md:px-8 border-b border-white/5 bg-slate-950 relative overflow-hidden">
+      <div className="absolute bottom-[-100px] right-[-100px] w-96 h-96 bg-blue-900/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-[-100px] left-[-100px] w-80 h-80 bg-blue-900/5 rounded-full blur-[100px] pointer-events-none" />
+      
+      <div className="max-w-6xl mx-auto relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
           
-          {/* Left Side: Detail list & Coordinates */}
-          <div className="lg:col-span-5 flex flex-col justify-between">
+          {/* Left Side: System status & coordinates */}
+          <div className="lg:col-span-5 space-y-10">
             <div>
-              <span className="text-xs font-bold text-blue-500 uppercase tracking-widest block mb-3">
-                INTEGRATION PROTOCOL
+              <span className="text-xs font-bold text-blue-500 uppercase tracking-widest block mb-3 font-mono">
+                ROUTING GATEWAY
               </span>
-              <h2 className="text-3xl sm:text-4xl font-bold font-display text-white tracking-tight mb-6">
-                Let's Build Better <br />SAP Solutions
+              <h2 className="text-3xl sm:text-4xl font-bold font-display text-white tracking-tight mb-5">
+                Establish Direct <br />System Connection
               </h2>
-              <p className="text-slate-400 font-sans text-sm sm:text-base leading-relaxed mb-8 font-light">
-                Looking to expand your SAP development capacity, adopt clean-core side extensions on BTP, integrate custom AI models, or optimize legacy ABAP performance? Reach out below for immediate availability.
+              <p className="text-slate-405 font-sans text-xs sm:text-sm font-light leading-relaxed max-w-sm mb-6">
+                To guarantee 100% transmission safety and bypass third-party SMTP server and firewall blocks, you can connect directly with Rajat using client-authorized pathways below.
               </p>
 
-              <div className="space-y-6">
-                {/* Email Item */}
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-450">
-                    <Mail className="w-4.5 h-4.5" />
+              <div className="space-y-4">
+                {/* Email Node Card */}
+                <div className="p-4 bg-slate-900/10 border border-white/5 rounded-xl flex items-center justify-between group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-400 group-hover:text-blue-400 group-hover:border-blue-500/20 transition-all duration-300">
+                      <Mail className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <span className="text-[9px] font-mono text-slate-500 uppercase font-bold block">DIRECT INBOX</span>
+                      <a href={`mailto:${PORTFOLIO_OWNER.email}`} className="text-slate-200 hover:text-white font-semibold text-xs sm:text-sm transition-colors block">
+                        {PORTFOLIO_OWNER.email}
+                      </a>
+                    </div>
                   </div>
-                  <div>
-                    <span className="text-[10px] font-mono text-slate-500 uppercase font-bold block">DIRECT EMAIL</span>
-                    <a href={`mailto:${PORTFOLIO_OWNER.email}`} className="text-slate-300 hover:text-white font-sans text-sm sm:text-base font-semibold">
-                      {PORTFOLIO_OWNER.email}
-                    </a>
-                  </div>
+
+                  <button
+                    onClick={handleCopyEmail}
+                    className="p-2 bg-slate-950 hover:bg-slate-900 border border-slate-800 rounded text-slate-400 hover:text-white transition-all cursor-pointer"
+                    title="Copy email to clipboard"
+                  >
+                    {copiedEmail ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
 
-                {/* Location Item */}
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-450">
-                    <MapPin className="w-4.5 h-4.5" />
+                {/* Location Zone */}
+                <div className="p-4 bg-slate-900/10 border border-white/5 rounded-xl flex items-center gap-4">
+                  <div className="w-10 h-10 rounded bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-440">
+                    <MapPin className="w-4.5 h-4.5 text-slate-400" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-mono text-slate-500 uppercase font-bold block">LOCATION</span>
-                    <span className="text-slate-300 font-sans text-sm sm:text-base font-semibold">
-                      {PORTFOLIO_OWNER.location}
+                    <span className="text-[9px] font-mono text-slate-500 uppercase font-bold block">GEOGRAPHIC NODE</span>
+                    <span className="text-slate-200 font-semibold text-xs sm:text-sm leading-relaxed block">
+                      {PORTFOLIO_OWNER.location} (Asia)
                     </span>
                   </div>
                 </div>
 
-                {/* Status Item */}
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-450">
-                    <Globe className="w-4.5 h-4.5 animate-pulse text-blue-500" />
+                {/* Dynamic Clock Timezone Zone */}
+                <div className="p-4 bg-slate-900/10 border border-white/5 rounded-xl flex items-center gap-4">
+                  <div className="w-10 h-10 rounded bg-slate-950 border border-slate-850 flex items-center justify-center">
+                    <Clock className="w-4.5 h-4.5 text-blue-500 animate-pulse" />
                   </div>
                   <div>
-                    <span className="text-[10px] font-mono text-slate-500 uppercase font-bold block">AVAILABILITY Status</span>
-                    <span className="text-emerald-400 font-mono text-xs font-semibold">
-                      ● Active for Remote Advisory & Contracts
+                    <span className="text-[9px] font-mono text-slate-500 uppercase font-bold block">LOCAL NODE TIME (IST)</span>
+                    <span className="text-slate-200 font-mono text-xs sm:text-sm font-semibold tracking-tight block">
+                      {timeStr || "Tracking..."} (UTC +5:30)
+                    </span>
+                  </div>
+                </div>
+
+                {/* Availability status */}
+                <div className="p-4 bg-slate-900/10 border border-white/5 rounded-xl flex items-center gap-4">
+                  <div className="w-10 h-10 rounded bg-slate-950 border border-slate-850 flex items-center justify-center">
+                    <Globe className="w-4.5 h-4.5 text-emerald-405 animate-spin" style={{ animationDuration: '8s' }} />
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[9px] font-mono text-slate-500 uppercase font-bold block">OPPORTUNITY BEACON</span>
+                    <span className="text-emerald-450 font-mono text-[10px] sm:text-xs font-bold block flex items-center gap-1.5 uppercase tracking-wide">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-505 animate-ping" />
+                      Active for Remote Advisory, Contracts & Leads
                     </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Social Grid */}
-            <div className="pt-10 mt-10 border-t border-white/5">
-              <h5 className="font-display font-bold text-[10px] text-slate-500 uppercase tracking-widest mb-4">DIRECT SYSTEM NODES</h5>
-              <div className="flex gap-4">
-                <a href={PORTFOLIO_OWNER.linkedin} target="_blank" className="p-2.5 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors">
-                  <Linkedin className="w-4 h-4" />
+            {/* Direct Social Nodes */}
+            <div className="pt-8 border-t border-white/5">
+              <h5 className="font-display font-bold text-[9px] text-slate-500 uppercase tracking-widest mb-3.5 block font-mono">
+                EXTERNAL NODE HOPS
+              </h5>
+              <div className="flex gap-3">
+                <a 
+                  href="https://github.com" // Placeholder template url
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3.5 py-2 rounded bg-slate-950 border border-slate-850 text-slate-400 hover:text-white hover:border-slate-750 text-xs font-mono transition-all"
+                >
+                  <Github className="w-4 h-4 text-slate-355" />
+                  <span>Explore GitHub</span>
+                  <ExternalLink className="w-3 h-3 text-slate-600" />
                 </a>
               </div>
             </div>
           </div>
 
-          {/* Right Side: Lead Form with interactive feedback */}
+          {/* Right Side: Interactive Client Email Builder */}
           <div className="lg:col-span-7">
-            <div className="relative p-7 sm:p-8 bg-slate-900/10 border border-white/5 rounded-xl">
+            <div className="relative p-6 sm:p-8 bg-slate-900/10 border border-white/5 rounded-2xl">
               
-              {status === "success" ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex flex-col items-center justify-center py-6 text-center min-h-[350px]"
-                >
-                  <div className="w-14 h-14 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-500/25 flex items-center justify-center mb-6">
-                    <BadgeCheck className="w-8 h-8" />
-                  </div>
-                  <h3 className="font-display font-bold text-white text-lg sm:text-xl mb-2 tracking-tight">Message Processed</h3>
-                  
-                  {submitDetails?.emailSent ? (
-                    <p className="text-slate-400 font-sans text-xs sm:text-sm max-w-sm mb-6 font-light leading-relaxed">
-                      A secure lead email has been dispatched via SMTP server. Rajat will review your query and reply within 12 business hours.
-                    </p>
-                  ) : isGoogleAppPasswordErr ? (
-                    <div className="max-w-md mb-6 p-5 bg-slate-950 border border-amber-500/10 rounded text-left space-y-4">
-                      <div className="flex items-start gap-2.5">
-                        <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-amber-500 font-mono text-[11px] uppercase font-bold tracking-wider leading-none">
-                            Gmail App Password Required
-                          </p>
-                          <p className="text-slate-400 font-sans text-[11px] mt-1 font-light leading-relaxed">
-                            Google rejected the login. Since 2-Step Verification is active on your Gmail account, standard passwords cannot be used for direct server mailing.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="border-t border-white/5 pt-3.5 space-y-2 text-xs font-sans text-slate-300 font-light">
-                        <p className="font-semibold text-white text-[11px]">How to resolve this in Google AI Studio:</p>
-                        <ol className="list-decimal pl-4 space-y-1.5 text-slate-400 text-[11px]">
-                          <li>Go to <a href="https://myaccount.google.com" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">Google Account Settings</a></li>
-                          <li>Search for &quot;<strong>App Passwords</strong>&quot;</li>
-                          <li>Generate an app password for &quot;Mail&quot;</li>
-                          <li>Update your <strong>SMTP_PASS</strong> environment variable in Settings with the 16-character code</li>
-                        </ol>
-                      </div>
-
-                      {renderMailFallbackButtons(true)}
-                    </div>
-                  ) : submitDetails?.warning === "SMTP_ERROR" ? (
-                    (() => {
-                      const isResendInvalidKey = !!(
-                        submitDetails.error &&
-                        (submitDetails.error.includes("Status 401") ||
-                          submitDetails.error.includes("API key is invalid") ||
-                          submitDetails.error.includes("validation_error"))
-                      );
-
-                      if (isResendInvalidKey) {
-                        return (
-                          <div className="max-w-md mb-6 p-5 bg-slate-950 border border-red-500/10 rounded text-left space-y-4">
-                            <div className="flex items-start gap-2.5">
-                              <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
-                              <div>
-                                <p className="text-red-500 font-mono text-[11px] uppercase font-bold tracking-wider leading-none">
-                                  Resend API Key Invalid (401 Unauthorized)
-                                </p>
-                                <p className="text-slate-400 font-sans text-[11px] mt-1 font-light leading-relaxed">
-                                  Your email dispatch has failed because Resend rejected your <code className="text-red-400 font-mono font-bold bg-slate-900 px-1 py-0.5 rounded">RESEND_API_KEY</code> as invalid.
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="border-t border-white/5 pt-3.5 space-y-2 text-xs font-sans text-slate-300 font-light font-sans">
-                              <p className="font-semibold text-white text-[11px] uppercase tracking-wider text-rose-400">🚨 Standard Root Causes:</p>
-                              <ol className="list-decimal pl-4 space-y-2 text-slate-400 text-[11px] leading-relaxed">
-                                <li>
-                                  <strong className="text-white">Wrong Key Pasted (Render Token instead of Resend):</strong>
-                                  <p className="mt-0.5">Please check if the key you configured starts with <code className="text-yellow-400 font-mono">rnd_</code>. If so, that is a Render token! Resend API keys must start with <code className="text-emerald-400 font-mono">re_</code>.</p>
-                                </li>
-                                <li>
-                                  <strong className="text-white">Incomplete copy-paste:</strong>
-                                  <p className="mt-0.5">Double check you copied the entire key from the Resend console.</p>
-                                </li>
-                                <li>
-                                  <strong className="text-white">Resend Free-Tier Restriction (TO_EMAIL mismatch):</strong>
-                                  <p className="mt-0.5">On Free Resend tiers, you can only deliver emails to the email address that registered the Resend account (such as <code className="text-emerald-400 font-mono">wwe.rajattiger.com@gmail.com</code>). Verify that the <code className="text-amber-400 font-mono">TO_EMAIL</code> setting matches this exactly, or verify your domain.</p>
-                                </li>
-                              </ol>
-                            </div>
-
-                            <div className="border-t border-white/5 pt-3.5 space-y-2 text-xs font-sans text-slate-350 font-light">
-                              <p className="font-semibold text-white text-[11px]">How to resolve this in Render dashboard:</p>
-                              <ol className="list-decimal pl-4 space-y-1.5 text-slate-400 text-[11px]">
-                                <li>Go to your <a href="https://resend.com/api-keys" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline font-medium">Resend API Keys Console</a> and copy/generate a real key starting with <code className="text-emerald-400 font-mono">re_</code>.</li>
-                                <li>Go to your <a href="https://dashboard.render.com" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline font-medium">Render Dashboard</a>.</li>
-                                <li>Click on <strong className="text-white">Env Groups</strong> on the left side menu.</li>
-                                <li>Locate the <code className="bg-slate-900 border border-slate-800 text-slate-300 font-mono px-1 py-0.5 rounded text-[10px]">Rajat_resume</code> group.</li>
-                                <li>Update the value of <code className="font-mono text-emerald-400">RESEND_API_KEY</code> with your real Resend key, and save. Render will redeploy your app automatically!</li>
-                              </ol>
-                            </div>
-
-                            {renderMailFallbackButtons(true)}
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <div className="max-w-md mb-6 p-4 bg-slate-950 border border-red-500/10 rounded text-left space-y-3">
-                          <div className="flex items-center gap-2 text-red-500">
-                            <AlertCircle className="w-4 h-4" />
-                            <span className="font-mono text-[11px] uppercase font-bold tracking-wider">SMTP Delivery Failure</span>
-                          </div>
-                          <p className="text-slate-350 font-sans text-xs font-light leading-relaxed">
-                            The mail dispatch failed. Details: <code className="bg-slate-900 border border-slate-800 text-red-400 px-1 py-0.5 rounded text-[10px] break-all font-mono block mt-1">{submitDetails.error || "Unknown credentials error"}</code>
-                          </p>
-                          {renderMailFallbackButtons(true)}
-                        </div>
-                      );
-                    })()
-                  ) : (
-                    <div className="max-w-md mb-6 p-4 bg-slate-950 border border-slate-850 rounded text-left space-y-3">
-                      <p className="text-amber-500 font-mono text-[10px] uppercase font-bold tracking-wider flex items-center gap-1.5 leading-none">
-                        ⚠️ Mail Forwarding Pending
-                      </p>
-                      <p className="text-slate-300 font-sans text-xs font-light leading-relaxed">
-                        Your submission has been captured safely in the temporary server message buffer (you can verify it). However, SMTP keys are not configured in your settings.
-                      </p>
-                      {renderMailFallbackButtons(true)}
-                    </div>
-                  )}
-
-                  <button
-                    onClick={() => setStatus("idle")}
-                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-mono text-xs rounded transition-colors cursor-pointer"
+              <AnimatePresence mode="wait">
+                {packagerState === "ready" ? (
+                  <motion.div
+                    key="packaged"
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
+                    className="flex flex-col justify-between py-2 min-h-[350px]"
                   >
-                    Send Another Message
-                  </button>
-                </motion.div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    {/* Name */}
+                    <div className="text-center max-w-sm mx-auto mb-6">
+                      <div className="w-12 h-12 rounded-full bg-emerald-950/40 text-emerald-400 border border-emerald-500/15 flex items-center justify-center mb-4 mx-auto">
+                        <BadgeCheck className="w-6 h-6" />
+                      </div>
+                      <h4 className="font-display font-bold text-white text-base tracking-tight mb-1.5">
+                        Message Packaged Safely
+                      </h4>
+                      <p className="text-slate-405 font-sans text-xs leading-relaxed font-light">
+                        To transmit this request to Rajat, trigger one of the client-authorized direct nodes below.
+                      </p>
+                    </div>
+
+                    {/* Pre-formatted message code box */}
+                    <div className="p-4 bg-slate-950 border border-slate-850 rounded-xl space-y-2 mb-6">
+                      <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest block font-bold leading-none">
+                        CLIENT DISPATCH PAYLOAD PREVIEW
+                      </span>
+                      <div className="max-h-40 overflow-y-auto text-[10px] font-mono text-slate-300 leading-relaxed whitespace-pre-wrap select-all">
+                        {getMailText()}
+                      </div>
+                    </div>
+
+                    {/* Action Hub */}
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <button
+                          type="button"
+                          onClick={handleCopyPayload}
+                          className="inline-flex items-center justify-center gap-2 py-3 px-4 bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-300 hover:text-white font-mono text-xs font-bold uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
+                        >
+                          {copiedPayload ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                          <span>{copiedPayload ? "Draft Copied!" : "1. Copy Draft Details"}</span>
+                        </button>
+
+                        <a
+                          href={getGmailUrl()}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 py-3 px-4 bg-red-600/90 hover:bg-red-500 text-white font-mono text-xs font-bold uppercase tracking-wider rounded-xl transition-colors text-center"
+                        >
+                          <Mail className="w-4 h-4" />
+                          <span>2. Open Gmail Webmail</span>
+                        </a>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPackagerState("idle");
+                          setFormData({ name: "", email: "", subject: "", message: "" });
+                        }}
+                        className="w-full text-center text-slate-500 hover:text-slate-350 font-mono text-[10px] uppercase tracking-wider pt-2 transition-colors cursor-pointer block"
+                      >
+                        ← Edit message / Clear Package
+                      </button>
+                    </div>
+                  </motion.div>
+                ) : packagerState === "packaging" ? (
+                  <motion.div
+                    key="packaging"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col items-center justify-center py-10 min-h-[350px] text-center space-y-4"
+                  >
+                    <div className="relative w-12 h-12">
+                      <span className="absolute inset-0 rounded-full border-2 border-blue-500/10 border-t-blue-500 animate-spin" />
+                      <Cpu className="absolute inset-2.5 w-7 h-7 text-blue-500 animate-pulse" />
+                    </div>
+                    <div className="space-y-1">
+                      <span className="font-mono text-blue-400 text-xs font-bold uppercase tracking-widest block">
+                        COMPILING PREFERRED PAYLOAD...
+                      </span>
+                      <p className="text-slate-500 text-[10px] font-mono leading-none">
+                        Structuring header annotations and body components
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.form 
+                    key="form"
+                    onSubmit={handlePackageMessage} 
+                    className="space-y-5"
+                  >
+                    <div className="flex items-center gap-1.5 pb-2 border-b border-white/5">
+                      <Sparkles className="w-4 h-4 text-blue-400" />
+                      <span className="text-[10px] font-mono text-slate-400 uppercase font-bold tracking-wider">
+                        03. Quick Connection Package Builder
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                      {/* Name */}
+                      <div className="flex flex-col gap-1.5">
+                        <label htmlFor="form-name" className="text-[9px] font-mono text-slate-400 uppercase font-bold">Your Name *</label>
+                        <input
+                          id="form-name"
+                          type="text"
+                          required
+                          placeholder="E.g. Recruiting Manager / Enterprise Director"
+                          className="p-3 bg-slate-950/80 border border-slate-850 focus:border-blue-500/20 rounded-lg text-slate-200 text-xs font-sans outline-none transition-all placeholder:text-slate-705 font-light"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        />
+                      </div>
+                      {/* Email */}
+                      <div className="flex flex-col gap-1.5">
+                        <label htmlFor="form-email" className="text-[9px] font-mono text-slate-400 uppercase font-bold">Your Email *</label>
+                        <input
+                          id="form-email"
+                          type="email"
+                          required
+                          placeholder="E.g. director@organization.com"
+                          className="p-3 bg-slate-950/80 border border-slate-850 focus:border-blue-500/20 rounded-lg text-slate-200 text-xs font-sans outline-none transition-all placeholder:text-slate-705 font-light"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Subject */}
                     <div className="flex flex-col gap-1.5">
-                      <label htmlFor="form-name" className="text-[10px] font-mono text-slate-400 uppercase font-bold">Your Name *</label>
+                      <label htmlFor="form-subject" className="text-[9px] font-mono text-slate-400 uppercase font-bold">Subject / Topic</label>
                       <input
-                        id="form-name"
+                        id="form-subject"
                         type="text"
-                        required
-                        disabled={status === "sending"}
-                        placeholder="John Doe"
-                        className="p-3 bg-slate-950/80 border border-slate-850 focus:border-blue-500/30 rounded text-slate-200 text-sm font-sans outline-hidden transition-all placeholder:text-slate-700 font-light"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        placeholder="E.g. Senior SAP ABAP Recruitment / Consulting Inquiry"
+                        className="p-3 bg-slate-950/80 border border-slate-850 focus:border-blue-500/20 rounded-lg text-slate-200 text-xs font-sans outline-none transition-all placeholder:text-slate-705 font-light"
+                        value={formData.subject}
+                        onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                       />
                     </div>
-                    {/* Email */}
+
+                    {/* Message */}
                     <div className="flex flex-col gap-1.5">
-                      <label htmlFor="form-email" className="text-[10px] font-mono text-slate-400 uppercase font-bold">Email Address *</label>
-                      <input
-                        id="form-email"
-                        type="email"
+                      <label htmlFor="form-message" className="text-[9px] font-mono text-slate-400 uppercase font-bold">Message Details *</label>
+                      <textarea
+                        id="form-message"
+                        rows={4}
                         required
-                        disabled={status === "sending"}
-                        placeholder="john@organization.com"
-                        className="p-3 bg-slate-950/80 border border-slate-850 focus:border-blue-500/30 rounded text-slate-200 text-sm font-sans outline-hidden transition-all placeholder:text-slate-700 font-light"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="Detail your requirements, project timelines, or interview schedules..."
+                        className="p-3 bg-slate-950/80 border border-slate-850 focus:border-blue-500/20 rounded-lg text-slate-200 text-xs font-sans outline-none transition-all placeholder:text-slate-705 resize-none font-light leading-relaxed"
+                        value={formData.message}
+                        onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                       />
                     </div>
-                  </div>
 
-                  {/* Subject */}
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="form-subject" className="text-[10px] font-mono text-slate-400 uppercase font-bold">Subject / Project Topic</label>
-                    <input
-                      id="form-subject"
-                      type="text"
-                      disabled={status === "sending"}
-                      placeholder="Consulting proposal / SAP Lead Recruitment"
-                      className="p-3 bg-slate-950/80 border border-slate-850 focus:border-blue-500/30 rounded text-slate-200 text-sm font-sans outline-hidden transition-all placeholder:text-slate-700 font-light"
-                      value={formData.subject}
-                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    />
-                  </div>
-
-                  {/* Message */}
-                  <div className="flex flex-col gap-1.5">
-                    <label htmlFor="form-message" className="text-[10px] font-mono text-slate-400 uppercase font-bold">Your Message *</label>
-                    <textarea
-                      id="form-message"
-                      rows={4}
-                      required
-                      disabled={status === "sending"}
-                      placeholder="Detail your requirements, project timelines, or interview schedules..."
-                      className="p-3 bg-slate-950/80 border border-slate-850 focus:border-blue-500/30 rounded text-slate-200 text-sm font-sans outline-hidden transition-all placeholder:text-slate-700 resize-none font-light"
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    />
-                  </div>
-
-                  {/* Submit Button */}
-                  <button
-                    type="submit"
-                    disabled={status === "sending" || !formData.name || !formData.email || !formData.message}
-                    className="w-full flex items-center justify-center gap-2 py-3 bg-blue-650 hover:bg-blue-550 disabled:bg-slate-950 disabled:text-slate-600 border border-blue-500/20 text-white font-bold rounded shadow-sm transition-all duration-200 cursor-pointer text-xs uppercase tracking-wider font-mono disabled:cursor-not-allowed"
-                  >
-                    {status === "sending" ? (
-                      <>
-                        <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                        <span>Transmitting secure payload...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Send className="w-4 h-4" />
-                        <span>Transmit Message</span>
-                      </>
-                    )}
-                  </button>
-
-                  {/* Submission Error Info */}
-                  {status === "error" && (
-                    <div className="p-4 bg-red-950/10 border border-red-500/15 rounded flex flex-col gap-1.5 mt-3">
-                      <span className="text-red-400 font-mono text-xs font-bold">❌ Error Transmitting Payload:</span>
-                      <span className="text-slate-400 text-xs leading-relaxed font-light">{errorMsg}</span>
-                      {renderMailFallbackButtons(true)}
-                    </div>
-                  )}
-
-                </form>
-              )}
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={!formData.name || !formData.email || !formData.message}
+                      className="w-full flex items-center justify-center gap-2 py-3 bg-blue-650 hover:bg-blue-550 disabled:bg-slate-950 disabled:text-slate-600 border border-blue-500/20 text-white font-bold rounded-lg shadow-sm transition-all duration-200 cursor-pointer text-xs uppercase tracking-wider font-mono disabled:cursor-not-allowed"
+                    >
+                      <Cpu className="w-4 h-4" />
+                      <span>Prepare connection package</span>
+                    </button>
+                  </motion.form>
+                )}
+              </AnimatePresence>
 
             </div>
           </div>

@@ -12,6 +12,4 @@ services:
 
 envVarGroups:
   - name: Rajat_resume
-    envVars:
-      - key: RESEND_API_KEY
-        value: re_MQ3qzBXC_Na9h74Zu4SXL1fA3frRVKqw8
+    envVars: []

@@ -8,7 +8,6 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
-import { handleContactSubmission, getStoredMessages } from "./contactHandler";
 
 dotenv.config();
 
@@ -157,13 +156,6 @@ Now, reply to the user's latest query representing Rajat's background. Keep answ
     res.json({ text: fallbackText });
   }
 });
-
-// 3. API: Secure Contact Form submission and forwarding
-app.post("/api/contact", handleContactSubmission);
-
-// 4. API: Retrieve list of messages (Used for testing / fallback review)
-app.get("/api/messages", getStoredMessages);
-
 
 // Configure Vite Development Server vs Static Production Server
 async function setupServer() {
