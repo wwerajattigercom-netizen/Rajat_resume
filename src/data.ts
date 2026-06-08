@@ -93,7 +93,7 @@ export const TIMELINE: TimelineItem[] = [
   {
     company: "SNP - VALIDATE",
     role: "Senior ABAP Consultant",
-    period: "July 2020 - Present",
+    period: "September 2022 - June 2026",
     location: "Bangalore, India (Global Remote)",
     achievements: [
       "Designed and delivered complex, highly scalable SAP ABAP applications using Object-Oriented ABAP (OOPS) and classical design patterns (Factory, Singleton, MVC, Strategy), improving code maintainability by 30% and accelerating feature delivery across SAP ECC and S/4HANA landscapes.",

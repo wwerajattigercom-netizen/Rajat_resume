@@ -125,7 +125,7 @@ async function createResumePdf() {
   drawHeading('PROFESSIONAL EXPERIENCE');
 
   // Job 1
-  drawText('SNP - VALIDATE – Senior ABAP Consultant | Bangalore, India (July 2020 – Present)', { bold: true, size: 10.5 });
+  drawText('SNP - VALIDATE – Senior ABAP Consultant | Bangalore, India (September 2022 – June 2026)', { bold: true, size: 10.5 });
   y -= 2;
   const bullets1 = [
     'Designed and delivered complex SAP ABAP enterprise applications using advanced Object-Oriented ABAP (OOPS) and standard design patterns (Factory, Singleton, Callback, MVC, Strategy), improving system maintainability by 30% and accelerating core feature delivery across SAP ECC and S/4HANA landscapes.',
