@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  Mail, MapPin, Globe, Github, Send, 
+  Mail, MapPin, Globe, Github, Linkedin, Send, 
   BadgeCheck, Copy, Check, Clock, ExternalLink, Sparkles, Cpu 
 } from "lucide-react";
 import { PORTFOLIO_OWNER } from "../data";
@@ -195,15 +195,25 @@ export default function Contact() {
               <h5 className="font-display font-bold text-[9px] text-slate-500 uppercase tracking-widest mb-3.5 block font-mono">
                 EXTERNAL NODE HOPS
               </h5>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <a 
-                  href="https://github.com" // Placeholder template url
+                  href={PORTFOLIO_OWNER.github}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 px-3.5 py-2 rounded bg-slate-950 border border-slate-850 text-slate-400 hover:text-white hover:border-slate-750 text-xs font-mono transition-all"
                 >
                   <Github className="w-4 h-4 text-slate-355" />
                   <span>Explore GitHub</span>
+                  <ExternalLink className="w-3 h-3 text-slate-600" />
+                </a>
+                <a 
+                  href={PORTFOLIO_OWNER.linkedin}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3.5 py-2 rounded bg-slate-950 border border-slate-850 text-slate-400 hover:text-white hover:border-slate-750 text-xs font-mono transition-all"
+                >
+                  <Linkedin className="w-4 h-4 text-blue-400" />
+                  <span>LinkedIn Profile</span>
                   <ExternalLink className="w-3 h-3 text-slate-600" />
                 </a>
               </div>
