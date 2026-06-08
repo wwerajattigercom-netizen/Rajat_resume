@@ -5,6 +5,7 @@
 
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -155,6 +156,24 @@ Now, reply to the user's latest query representing Rajat's background. Keep answ
 
     res.json({ text: fallbackText });
   }
+});
+
+// Explicit route to serve the generated resume in PDF format with proper headers
+app.get("/resume.pdf", (req, res) => {
+  const possiblePaths = [
+    path.join(process.cwd(), "public", "resume.pdf"),
+    path.join(process.cwd(), "dist", "resume.pdf"),
+  ];
+  
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) {
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", "attachment; filename=Rajat_Pande_Resume.pdf");
+      return res.sendFile(p);
+    }
+  }
+  
+  res.status(404).send("Resume PDF file not found. Please contact Rajat directly.");
 });
 
 // Configure Vite Development Server vs Static Production Server

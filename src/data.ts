@@ -93,28 +93,41 @@ export const TIMELINE: TimelineItem[] = [
   {
     company: "SNP - VALIDATE",
     role: "Senior ABAP Consultant",
-    period: "2023 - Present",
-    location: "India (Global Remote Teams)",
+    period: "July 2020 - Present",
+    location: "Bangalore, India (Global Remote)",
     achievements: [
-      "Architected innovative Model Context Protocol (MCP) integrations, seamlessly linking core SAP backends with LLMs to allow conversational structured query executions.",
-      "Engineered bespoke AI-enabled SAP access utilities, reducing the knowledge barrier for complex non-technical administrative team lookups.",
-      "Pioneered critical performance-tuning initiatives on central database queries, successfully shrinking average database read response times by 90%.",
-      "Delivered over 100+ production stories and squashed 170+ defects, collaborating actively with teams across USA, Poland, Slovakia, and Germany."
+      "Designed and delivered complex, highly scalable SAP ABAP applications using Object-Oriented ABAP (OOPS) and classical design patterns (Factory, Singleton, MVC, Strategy), improving code maintainability by 30% and accelerating feature delivery across SAP ECC and S/4HANA landscapes.",
+      "Designed and implemented high-performance LLMs Model Context Protocol (MCP) integrations with SAP systems, enabling secure AI-driven ERP data access while strictly adhering to Clean Core Guidelines.",
+      "Delivered 100+ user stories, resolved 170+ legacy defects, and managed 250+ tasks using Agile SCRUM and JIRA with zero-downtime production deployments.",
+      "Optimized large-scale database operations using advanced clustering, hashing, and parallel cursor techniques, achieving up to 90% faster query retrieval speeds.",
+      "Collaborated with global functional consultants to deliver enterprise-grade SAP solutions and authored comprehensive technical specifications for junior developers, improving overall execution efficiency by 30%."
     ],
-    technologies: ["ABAP Cloud", "RAP", "SAP BTP", "AI Integrations", "Model Context Protocol (MCP)", "AMDP", "Agile SCRUM"]
+    technologies: ["Object-Oriented ABAP", "Design Patterns", "ABAP Cloud", "RAP", "Model Context Protocol (MCP)", "AMDP", "ST05 / SAT Profiling", "Agile SCRUM"]
   },
   {
-    company: "EXA AG",
+    company: "EXA AG – OTP Extractor",
     role: "Technology Consultant",
-    period: "2021 - 2023",
-    location: "India",
+    period: "March 2022 - August 2022",
+    location: "Bangalore, India",
     achievements: [
-      "Designed and developed the high-performing 'OTP Extractor' product, reducing manual data lookups and verification delays by 80%.",
-      "Implemented full side-by-side cloud enhancements on SAP BTP, utilizing secure Destination pathways and standard OData protocols.",
-      "Developed comprehensive semantic models through recursive CDS Views, significantly streamlining analytical report processing.",
-      "Orchestrated automated translation pipeline modules leveraging Generative AI endpoints, slashing multi-lingual transition bottlenecks by over 95%."
+      "Implemented end-to-end 'OTP Extractor' product framework including data extraction, AL11 application server file handling, and secure imports into desired target systems.",
+      "Improved performance using parallel cursor techniques, background jobs, and optimized internal table processing for high-volume transactions.",
+      "Used ABAP dynamic programming, run-time type services (RTTS), and structural reflection to build flexible, configurable complex business logic engines."
     ],
-    technologies: ["SAP ABAP", "CDS Views", "OData Services", "SAP BTP", "SAP S/4HANA", "Generative AI API", "Clean Core Extensions"]
+    technologies: ["OO ABAP", "Dynamic Programming", "AL11 File Handling", "Parallel Cursors", "Performance Optimization", "SAP S/4HANA"]
+  },
+  {
+    company: "EXA OTP (Operational Transfer Pricing)",
+    role: "Technology Consultant",
+    period: "April 2021 - February 2022",
+    location: "Bangalore, India",
+    achievements: [
+      "Built and exposed secure backend semantic data models using ABAP Core Data Services (CDS Views) and OData services in a SAP S/4HANA environment, enabling seamless transactional visualization on SAP BTP.",
+      "Designed and maintained robust databases, complex dictionary views, custom table maintenance generators (TMGs), and interactive Module Pool dialog screens with custom controls.",
+      "Designed and implemented an automated translation utility for SAP backend repository objects, reducing manual conversion efforts by 95%.",
+      "Resolved critical system bugs and delivered robust cloud extensions utilizing clean core side-by-side design principles."
+    ],
+    technologies: ["Module Pool Programming", "CDS Views", "OData Services", "TMG View Maintenance", "SAP BTP", "Translation Utility", "SAP ABAP"]
   }
 ];
 

@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { motion, useScroll, useSpring, AnimatePresence } from "motion/react";
 import { Menu, X, Terminal, Cpu, MessageSquare, ArrowUp, Briefcase, Sparkles, Send, Mail, Download } from "lucide-react";
 import { PORTFOLIO_OWNER } from "./data";
+import { downloadRajatResume } from "./utils/pdfGenerator";
 
 // Sub-component imports
 import Hero from "./components/Hero";
@@ -162,15 +163,15 @@ export default function App() {
               )}
             </button>
 
-            <a
-              href="/resume.pdf"
-              download="Rajat_Pande_Resume.pdf"
+            <button
+              onClick={downloadRajatResume}
+              type="button"
               className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-blue-600/10 hover:bg-blue-600 border border-blue-500/30 font-mono text-[11px] text-blue-400 hover:text-white rounded transition-colors cursor-pointer"
               title="Download Resume (PDF)"
             >
               <Download className="w-3.5 h-3.5" />
               <span>Download CV (PDF)</span>
-            </a>
+            </button>
 
             <button
               onClick={() => scrollToSection("contact")}
@@ -240,14 +241,17 @@ export default function App() {
               <span>Get In Touch</span>
             </button>
 
-            <a
-              href="/resume.pdf"
-              download="Rajat_Pande_Resume.pdf"
+            <button
+              onClick={() => {
+                downloadRajatResume();
+                setMobileMenuOpen(false);
+              }}
+              type="button"
               className="w-full flex items-center justify-center gap-2 py-2.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-blue-400 text-xs font-semibold rounded cursor-pointer animate-pulse"
             >
               <Download className="w-4 h-4" />
               <span>Download CV (PDF)</span>
-            </a>
+            </button>
           </motion.div>
         )}
       </AnimatePresence>

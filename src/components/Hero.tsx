@@ -4,7 +4,7 @@
  */
 
 import { motion } from "motion/react";
-import { ArrowRight, Sparkles, Network, Database, Cpu, Cloud, Code, Download } from "lucide-react";
+import { ArrowRight, Sparkles, Network, Database, Cpu, Cloud, Code } from "lucide-react";
 
 export default function Hero({ onViewExperience, onConnect }: { onViewExperience: () => void, onConnect: () => void }) {
   const nodes = [
@@ -71,16 +71,6 @@ export default function Hero({ onViewExperience, onConnect }: { onViewExperience
             transition={{ duration: 0.7, delay: 0.3 }}
             className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 flex-wrap"
           >
-            <a
-              href="/resume.pdf"
-              download="Rajat_Pande_Resume.pdf"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-500 border border-blue-500/20 text-white font-semibold rounded-lg transition-all duration-200 w-full sm:w-auto shadow-md shadow-blue-500/10 hover:shadow-blue-500/20 cursor-pointer text-sm"
-              title="Download Resume in PDF Format"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download PDF Resume</span>
-            </a>
-
             <button
               onClick={onViewExperience}
               className="px-6 py-3 bg-slate-900 border border-slate-800 text-slate-300 font-semibold rounded-lg hover:border-slate-700 hover:text-white transition-all duration-200 w-full sm:w-auto cursor-pointer text-sm"

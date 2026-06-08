@@ -1,20 +1,18 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
-import fs from 'fs';
-import path from 'path';
 
-async function createResumePdf() {
+export async function downloadRajatResume() {
   const pdfDoc = await PDFDocument.create();
   const timesBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   const timesFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
   // Letter page: 612 x 792
   let page = pdfDoc.addPage([612, 792]);
-  let { width, height } = page.getSize();
+  const { width, height } = page.getSize();
   
   let y = height - 50;
   const marginX = 50;
 
-  function drawText(text, options = {}) {
+  function drawText(text: string, options: { bold?: boolean; size?: number; color?: any; lineGap?: number } = {}) {
     const font = options.bold ? timesBoldFont : timesFont;
     const size = options.size || 10;
     const color = options.color || rgb(0.1, 0.1, 0.1);
@@ -63,7 +61,7 @@ async function createResumePdf() {
     }
   }
 
-  function drawHeading(text) {
+  function drawHeading(text: string) {
     y -= 10;
     drawText(text, { bold: true, size: 12, color: rgb(0.05, 0.05, 0.05) });
     y -= 2;
@@ -186,26 +184,18 @@ async function createResumePdf() {
     drawText('• ' + bullet, { size: 9.5, lineGap: 13.5 });
   }
 
+  // High performance, 100% Client-Side trigger download
   const pdfBytes = await pdfDoc.save();
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
   
-  // Write to public folder
-  const publicPath = path.join(process.cwd(), 'public', 'resume.pdf');
-  if (!fs.existsSync(path.dirname(publicPath))) {
-    fs.mkdirSync(path.dirname(publicPath), { recursive: true });
-  }
-  fs.writeFileSync(publicPath, pdfBytes);
-  console.log('PDF Resume built successfully at', publicPath);
-
-  // Write to dist folder as well if exists
-  const distPath = path.join(process.cwd(), 'dist', 'resume.pdf');
-  if (!fs.existsSync(path.dirname(distPath))) {
-    fs.mkdirSync(path.dirname(distPath), { recursive: true });
-  }
-  fs.writeFileSync(distPath, pdfBytes);
-  console.log('PDF Resume built successfully at', distPath);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'Rajat_Pande_Resume.pdf';
+  document.body.appendChild(link);
+  link.click();
+  
+  // Cleanup
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
-
-createResumePdf().catch(err => {
-  console.error('Error generating PDF:', err);
-  process.exit(1);
-});
