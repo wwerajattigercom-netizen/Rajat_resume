@@ -18,6 +18,7 @@ const messagesStore: PortfolioMessage[] = [];
  * Handle secure contact submissions with robust error propagation and SMTP dispatch
  */
 export async function handleContactSubmission(req: Request, res: Response) {
+  let resendErrorDetail: string | null = null;
   try {
     const { name, email, subject, message } = req.body;
 
@@ -76,7 +77,7 @@ export async function handleContactSubmission(req: Request, res: Response) {
     }
 
     const smtpPort = smtpPortRaw ? parseInt(smtpPortRaw, 10) : 587;
-    const toEmail = "panderajat27@gmail.com";
+    const toEmail = (process.env.TO_EMAIL || "panderajat27@gmail.com").trim();
 
     const emailHtml = `
       <div style="font-family: sans-serif; padding: 24px; color: #1e293b; max-width: 600px; border: 1px solid #e2e8f0; border-radius: 8px; background-color: #ffffff;">
@@ -116,6 +117,7 @@ export async function handleContactSubmission(req: Request, res: Response) {
           `-----------------------------------------\n` +
           `Submitted at: ${new Date().toLocaleString()}`;
 
+
     // A. Check for HTTP REST-based Resend API first.
     // HTTP bypasses ALL outbound firewall / port 465 / port 587 blocking on Render Free Tiers seamlessly. 
     const resendApiKey = (process.env.RESEND_API_KEY || "").trim();
@@ -144,9 +146,11 @@ export async function handleContactSubmission(req: Request, res: Response) {
           return res.json({ success: true, emailSent: true, message: "Email sent successfully via Resend HTTP REST API!" });
         } else {
           const errMsg = await response.text();
-          throw new Error(`Resend REST API rejected payload: ${response.status} ${errMsg}`);
+          resendErrorDetail = `Resend HTTP API error (Status ${response.status}): ${errMsg}`;
+          console.error(resendErrorDetail);
         }
       } catch (httpErr: any) {
+        resendErrorDetail = `Resend HTTP Fetch connection error: ${httpErr.message || String(httpErr)}`;
         console.error("Resend HTTP API failed, falling back to SMTP cascade tries:", httpErr);
       }
     }
@@ -262,13 +266,18 @@ export async function handleContactSubmission(req: Request, res: Response) {
       });
     }
   } catch (err: any) {
-    console.error("Failed to forward contact email via SMTP:", err);
+    console.error("Failed to forward contact email:", err);
+    let errorDetail = err.message || String(err);
+    if (resendErrorDetail) {
+      errorDetail = `[Resend Fail: ${resendErrorDetail}] [SMTP Timeout: ${errorDetail}]`;
+    }
+    let customMsg = "Note: Render Free tiers block outbound SMTP ports (25, 465, 587) causing connection timeouts. An HTTP-based API like Resend is required. Please verify that your configured RESEND_API_KEY is a real Resend Key (starts with 're_'); the key in your settings starts with 'rnd_' which is a Render platform token instead. Note that Resend's free tier restricts sending only to the email that registered the Resend account. To deliver mail successfully, set the TO_EMAIL environment variable on Render to your Resend account's email address.";
     return res.json({
       success: true,
       emailSent: false,
       warning: "SMTP_ERROR",
-      error: err.message || String(err),
-      message: "Form accepted, but direct forwarding failed due to mail servers rejecting the login verification check. Check your authentication settings or Gmail App Password."
+      error: errorDetail,
+      message: customMsg
     });
   }
 }
